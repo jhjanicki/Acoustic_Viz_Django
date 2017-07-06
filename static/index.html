@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	<title>Circular Heat Map Acoustic data</title>
+
+	<!-- D3.js -->	
+    <script src="https://d3js.org/d3.v3.js"></script>
+
+	
+	<!-- jQuery -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+	<!-- jQuery UI-->
+	<script src="lib/jquery-ui.min.js"></script>
+	
+	<!-- Underscore -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+	
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+	
+	<script src="data.js"></script>
+	<script src="data2.js"></script>
+	
+	<script src="acoustic.js"></script>
+
+	<!-- Roboto & Asar CSS -->
+	<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+	<link href="https://fonts.googleapis.com/css?family=Asar" rel="stylesheet">
+	
+	<link href='lib/jquery-ui.min.css' rel='stylesheet' type='text/css'>
+	<link href='lib/jquery-ui.structure.min.css' rel='stylesheet' type='text/css'>
+	<link href='lib/jquery-ui.theme.min.css' rel='stylesheet' type='text/css'>
+	
+	  <style>
+		body {
+		  font-family: 'Asar', serif;
+		  font-size: 14px;
+		  font-weight: 400;
+		  color: #525252;
+		  text-align: center;
+		}
+		
+		html, body { 
+			width:auto; 
+			height:auto; 
+		}
+		.margin30{
+			margin-bottom:30px;
+		}
+		
+		h1,h2,h3,h4,p{
+			font-family: 'Asar', serif;
+		}
+		
+		.axis path,
+		.axis line {
+		  fill: none;
+		  stroke: #000;
+		  shape-rendering: crispEdges;
+		}
+
+		path:hover{
+			/* fill: black; */
+			cursor:pointer;
+		}
+		
+		#chart, #chart2{
+			z-index:1;
+		}
+		.tooltip {
+			font-family: 'Asar', serif;
+			background: #eee;
+			box-shadow: 0 0 5px #999999;
+			color: #333;
+			font-size: 12px;
+			left: 130px;
+			padding: 10px;
+			position: absolute;
+			text-align: center;
+			top: 95px;
+			z-index: 10;
+			display: block;
+			opacity: 0;
+		}
+		
+		label{	
+			padding-top:20px;
+		}
+
+		#time-range{
+			padding-top: 20px;
+		}
+		
+		#site-select{
+			margin-top: 20px;
+		}
+	  </style>
+  </head>
+  <body>
+
+	
+	<div id="cont" class="container-fluid text-center">
+	
+		<!-- Static navbar -->
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">OKEON Acoustic</a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li class="active"><a href="index.html">Acoustic Viz</a></li>
+              <li><a href="#">Field Sites</a></li>
+              <!--
+<li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="#">Action</a></li>
+                  <li><a href="#">Another action</a></li>
+                  <li><a href="#">Something else here</a></li>
+                  <li role="separator" class="divider"></li>
+                  <li class="dropdown-header">Nav header</li>
+                  <li><a href="#">Separated link</a></li>
+                  <li><a href="#">One more separated link</a></li>
+                </ul>
+              </li>
+-->
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+       
+              <li><a href="https://okeon.unit.oist.jp">OKEON Website</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+      </nav>
+		
+		<div class="row">
+			<div class="col-md-6">
+				<h2 class="text-left"> OKEON Churamori Project Acoustics </h2>
+				<h3 class="text-left">Bird call data visualized as a circular heat chart</h3>
+				<p class="text-left"> Before they sold out fixie vinyl, direct trade woke pour-over lomo tousled meggings. Succulents pinterest palo santo, fam meggings hoodie quinoa PBR&B neutra iPhone kinfolk. Affogato subway tile pour-over farm-to-table, keytar cliche tbh seitan la croix. Lyft scenester mixtape unicorn la croix meditation street art neutra everyday carry thundercats church-key aesthetic VHS.</p>
+			</div>
+			<div class = "col-md-6">	
+				<div>
+					<button type="button" class="btn btn-primary" id="data1">dataset1</button>
+					<button type="button" class="btn btn-primary" id="data2">dataset2</button>
+				</div>	
+				<div>
+					<select id="site-select" class="selectpicker">
+					</select>
+				</div>
+				<div>
+					<h3> Selected: <span id="selectedsite"></span> </h3>
+				</div>
+				<div id="time-range">
+				    <p>Time Range: <span id="slider-time"></span> to <span id="slider-time2"></span></p>
+				    
+				    <div class="sliders_step1">
+				        <div id="slider-range"></div>
+				    </div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class = "col-md-3">
+			</div>
+			<div class = "col-md-6">	
+				<div id="chart"></div>	
+			</div>
+			<div class = "col-md-3">
+			</div>
+			
+			
+		</div>
+
+		<div class="row">
+			<div class = "col-md-3">
+			</div>
+
+			<div class = "col-md-6">
+				<div id="chart2"></div>		
+			</div>
+			
+			<div class = "col-md-3">
+			</div>
+
+		</div>
+
+		
+	</div>
+
+	<script>
+
+
+
+/* populate select options */
+$.getJSON('/get-sites/')		
+		// when the data comes back from the server
+		.done(function(data) {	
+			console.log(data);
+			var sitesArray = data;
+			$.each(sitesArray,function(index, value) 
+				{
+					/* console.log(value); */
+				    $("#site-select").append('<option value=' + value.siteID + '>' + value.siteName + '</option>');
+				});
+		});
+
+
+// initial chart params for chart 1
+var dataDisplayed = data;
+var datasetDisplayed = data;
+var radial_labels=[];
+
+
+
+getRadialLabels(dataDisplayed);
+
+drawSlider(dataDisplayed);
+
+var segment_labels = ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
+var numSegments = segment_labels.length; //number of pieces the circle is divided into, 24 hours in a day
+var range_blue = ["#ffffd9", "#7fcdbb", "#225ea8"];
+var index_one = 0;
+
+//draw first chart
+
+var chart = d3.acoustic.circularHeat()
+	.domain([0,0.5, 1])// should make this dynamic
+	.range(range_blue)
+	.radialLabels(radial_labels)
+	.segmentLabels(segment_labels)
+	._index(index_one);
+	
+chart.accessor(function (d) {
+	return d.Average;
+})
+
+d3.select("#chart")
+	 .datum(dataDisplayed)
+	 .call(chart);
+
+//hover effect params
+var innerRadius = chart.innerRadius();
+var numSegments = chart.numSegments();
+var segmentHeight = chart.segmentHeight();
+var offset = chart.offset();
+var svg = d3.select("#chart");
+
+// call mouseover event
+chart.on("customHover", mouseover(svg,index_one,innerRadius,numSegments,segmentHeight,dataDisplayed));
+
+
+
+
+var dateStart = {key:'2016-10-29'};
+var dateEnd = {key:'2017-02-15'};
+var siteID = {key:'GESASHIOP'};
+
+
+$("#site-select").on('change',function(){
+	//update data filter by site, get min and max date to start off
+	
+	var selectedSite = $( "#site-select" ).val();
+	siteID.key=selectedSite;
+	
+	var selectedName = $( "#site-select option:selected" ).text();
+	$("#selectedsite").text(selectedName);
+	
+	$.getJSON('/get-data/', 
+			{date_start: dateStart.key, date_end:dateEnd.key, site_id: siteID.key })		
+		// when the data comes back from the server
+		.done(function(passedData) {	
+
+			var newDataCleanedArray = clean(passedData);
+			var arrayofdates = clean_24(newDataCleanedArray);
+			newDataCleanedArray = cleanDates(newDataCleanedArray,arrayofdates);
+			update(newDataCleanedArray);
+			
+		});
+	
+	
+});
+
+/* //alternative
+$.ajax({
+        url: '/get-data/',
+        type: 'GET',
+        data: {'date_start': dateStart.key, 'date_end':dateEnd.key, 'site_id': siteID.key },
+        traditional: true,
+        dataType: 'json',
+        success: function(data){
+            console.log(data);
+        }
+    });
+*/
+
+
+//function to clean data returned from server to only display times at whole hours
+function clean(passedData){
+	var dataCleanedArray = [];
+			passedData.forEach(function(d){
+				var dataCleaned = {};
+				dataCleaned['Day']=d.date_recorded;
+				dataCleaned['Time']=d.time_recorded;
+				dataCleaned['Average']=d.average;
+				dataCleanedArray.push(dataCleaned);
+				
+			})
+			
+			newDataCleanedArray = [];
+			
+			dataCleanedArray.forEach(function(d,i){
+				var middle = d.Time.slice(-5);
+				
+				if(middle=='00:00'){
+					newDataCleanedArray.push(d);
+					//dataCleanedArray.splice(i,1);
+				}
+				
+
+			});
+		return newDataCleanedArray;
+}
+
+/* populate_24(data); */
+
+//function to make sure there are 24 data poins in a day, if not then return the dates with <24 occurences
+function clean_24(passedData24){
+
+	var obj = {}; //store in object how many times each date occurs in the db, if not 24 then we get rid of it
+	for (var i = 0, j = passedData24.length; i < j; i++) {
+	  if (obj[passedData24[i].Day]) {
+	    obj[passedData24[i].Day]++;
+	  }
+	  else {
+	    obj[passedData24[i].Day] = 1;
+	  } 
+	}
+	
+	// store result in array of keys and array of values
+	var array = [];
+	array.push(obj);
+	var keys = d3.keys(array[0]);
+	var values = d3.values(array[0]);
+	
+	//store in array of objects
+	var result = [];
+	for(var i = 0; i < keys.length; i++){
+		var item = {};
+		item['date']=keys[i];
+		item['count']=values[i];
+		result.push(item);
+	}
+	
+	//get dates that don't have 24 hours
+	var arrayOfDates = [];
+	for(var i = 0; i < result.length; i++){
+		if(result[i].count != 24){
+			arrayOfDates.push(result[i].date);
+		}
+	}
+	//console.log(arrayOfDates);
+	
+	return arrayOfDates;
+}
+
+
+function cleanDates(passedDataClean, passedDates){
+
+	var indexToRemove = [];//store index of objects to remove in an array
+	for (var i=0; i<passedDataClean.length; i++){
+		for (var j=0;j<passedDates.length; j++){
+			if(passedDataClean[i].Day== passedDates[j]){
+				indexToRemove.push(i);
+			}
+		}
+	}
+	//console.log(indexToRemove);
+	
+	indexToRemove.reverse().forEach(function(index) {
+		passedDataClean.splice(index, 1);
+	});
+	
+	return passedDataClean;
+		
+	
+}
+
+
+function update(passedDataUpdate){
+	
+			dataDisplayed = passedDataUpdate;
+			datasetDisplayed = passedDataUpdate;
+			radial_labels = []; 
+			getRadialLabels(dataDisplayed);
+			swapDataset(dataDisplayed,radial_labels);
+			//console.log(radial_labels);
+			segmentHeight = (500 - 2 * innerRadius) / (2 * radial_labels.length);
+			// should make this dynamic
+    		offset = innerRadius + Math.ceil(dataDisplayed.length / numSegments) * segmentHeight;
+    		index=0;
+    		chart.on("customHover", mouseover(svg,index,innerRadius,numSegments,segmentHeight,dataDisplayed));
+}
+
+
+
+//swop datasets
+$("#data1").click({param: data}, onClick);
+$("#data2").click({param: data2}, onClick);
+
+	
+
+
+//get segment labels dynamically
+function getSegmentLabels(){
+	
+}
+
+function swapDataset(passedData,radiallabels){
+	chart.radialLabels(radiallabels).domain([0,0.5, 1]).range(range_blue);// should make this dynamic
+	d3.select("#chart").datum(passedData).call(chart);
+    drawSlider(passedData);
+}
+
+function onClick(passed){
+	dataDisplayed = passed.data.param;
+	datasetDisplayed = passed.data.param;
+	radial_labels = []; 
+	getRadialLabels(dataDisplayed);
+	swapDataset(dataDisplayed,radial_labels);
+	segmentHeight = (500 - 2 * innerRadius) / (2 * radial_labels.length);
+	// should make this dynamic
+    offset = innerRadius + Math.ceil(dataDisplayed.length / numSegments) * segmentHeight;
+    index=0;
+    chart.on("customHover", mouseover(svg,index,innerRadius,numSegments,segmentHeight,dataDisplayed));
+}
+
+//update radial labels based on data
+function getRadialLabels(passedData){	
+	var groupedData = _.groupBy(passedData, 'Day');
+	for(var k in groupedData) radial_labels.push(k);
+}
+
+//update viz
+function updateChart(passedData,radiallabels){
+	chart.radialLabels(radiallabels).domain([0,0.5, 1]).range(range_blue);// should make this dynamic
+	d3.select("#chart").datum(passedData)
+        .call(chart);
+}
+
+//mouseover effect
+function mouseover(svg,index,innerRadius,numSegments,segmentHeight,passedData){
+		//tooltip
+		var tooltip = svg
+			.append('div')
+			.attr('class', 'tooltip');
+			
+		tooltip.append('div').attr('class', 'time');
+        tooltip.append('div').attr('class', 'average');
+        tooltip.append('div').attr('class', 'day');
+			
+
+    	svg.selectAll("path.segment"+index)
+		.on('mouseover', function (d, i) {
+		// inc segment height of the one being hovered as well as all others of the same date & dec height of all others accordingly
+				
+				var targetIndex = Math.floor(i / numSegments); //the layer you are hovering
+				var zoomSize = 5; //inner 5px and outer 5px
+				var layerCnt = passedData.length / numSegments; //layer count, number of layers
+
+				if(data.length < 400){
+					d3.selectAll("path.segment"+index) //.arc indicates segment
+					.transition().duration(200) //transtion effect
+					.attr("d", d3.svg.arc() //set d again
+					.innerRadius(ir)
+					.outerRadius(or)
+					.startAngle(sa)
+					.endAngle(ea));
+				}else{
+					d3.selectAll("path.segment"+index) //.arc indicates segment
+					.transition().duration(0) //transtion effect
+					.attr("d", d3.svg.arc() //set d again
+					.innerRadius(ir)
+					.outerRadius(or)
+					.startAngle(sa)
+					.endAngle(ea));
+					
+				}
+
+				function getRadius(floor) {
+					if (floor === 0) { //inner radius doesn't change
+						return innerRadius;
+					}
+					if (floor === layerCnt) { //outer radius doesn't change
+						return innerRadius + layerCnt * segmentHeight;
+					}
+					if (floor <= targetIndex) { //it's math
+						return innerRadius + floor * segmentHeight - zoomSize * (floor / targetIndex);
+					} else { //math again
+						return innerRadius + floor * segmentHeight + zoomSize * ((layerCnt - floor) / (layerCnt - targetIndex));
+					}
+				}
+
+				function ir(d, i) {
+					return getRadius(Math.floor(i / numSegments));
+				}
+
+				function or(d, i) {
+					return getRadius(Math.floor(i / numSegments) + 1);
+				}
+				
+			tooltip.select('.time').html("<b> Time: " + d.Time + "</b>");
+			tooltip.select('.day').html("<b> Date: " + d.Day + "</b>");
+			tooltip.select('.average').html("<b> Value: " + d.Average + "</b>");
+			tooltip.style('display', 'block');
+			tooltip.style('opacity', 2);
+
+		})
+		.on('mousemove', function (d) {
+			tooltip.style('top', (d3.event.layerY + 10) + 'px')
+				.style('left', (d3.event.layerX - 25) + 'px');
+		})
+		.on('mouseout', function (d, i) {
+			
+			tooltip.style('display', 'none');
+			tooltip.style('opacity', 0);
+		
+			var targetIndex = Math.floor(i / numSegments);
+			var zoomSize = 5;
+			var layerCnt = passedData.length / numSegments;
+
+
+			d3.selectAll("path.segment"+index)
+				.transition().duration(0)
+				.attr("d", d3.svg.arc()
+					.innerRadius(ir)
+					.outerRadius(or)
+					.startAngle(sa)
+					.endAngle(ea))
+
+			function getRadius(floor) {
+				return innerRadius + floor * segmentHeight;
+			}
+
+			function ir(d, i) {
+
+				return getRadius(Math.floor(i / numSegments));
+			}
+
+			function or(d, i) {
+				return getRadius(Math.floor(i / numSegments) + 1);
+			}
+
+		});
+}
+
+//get start and end date dynamically for slider
+function getDateRange(passedData){
+	//--> called by slider start & end dates
+	
+	//get first object in dataPassed array, and get the date
+	firstObj=passedData.filter(function(d,i){
+		return i==0
+	});
+	//get last object in dataPassed array, and get the date
+	lastObj =  passedData.filter(function(d,i){
+		return i==passedData.length-1
+	});
+	datefrom = firstObj[0].Day;
+	dateto=lastObj[0].Day;
+	datejson = {'start':datefrom,'end':dateto};
+	return datejson;
+}
+
+
+function drawSlider(passedData){
+	//--> called by swapDataset
+	//<-- calls getDateRange
+	$("#slider-range").empty();
+	
+	var dt_from =  getDateRange(passedData)['start'];
+	var dt_to = getDateRange(passedData)['end'];
+	
+	$('#slider-time').html(dt_from);
+	$('#slider-time2').html(dt_to);
+	var min_val = Date.parse(dt_from)/1000;
+	var max_val = Date.parse(dt_to)/1000;
+	
+	function zeroPad(num, places) {
+	  var zero = places - num.toString().length + 1;
+	  return Array(+(zero > 0 && zero)).join("0") + num;
+	}
+	
+	function formatDT(__dt) {
+	    var year = __dt.getFullYear();
+	    var month = zeroPad(__dt.getMonth()+1, 2);
+	    var date = zeroPad(__dt.getDate(), 2);
+	    return year + '-' + month + '-' + date ;
+	};
+	
+	
+	$("#slider-range").slider({
+	    range: true,
+	    min: min_val,
+	    max: max_val,
+	    step: 10,
+	    values: [min_val, max_val],
+	    slide: function (e, ui) {
+	        var dt_cur_from = new Date(ui.values[0]*1000); 
+	        $('#slider-time').html(formatDT(dt_cur_from));
+	
+	        var dt_cur_to = new Date(ui.values[1]*1000);           
+	        $('#slider-time2').html(formatDT(dt_cur_to));
+	    },
+	    stop: function(e, ui) { 
+			var html = $('#slider-time').html();	  
+			var html2 = $('#slider-time2').html();
+			filterData(html,html2) 
+	    }
+	});
+	
+}
+
+
+var filtered = [];
+
+function filterData(start,end){
+	//--> called by slider drag stop event
+	//<-- calls updateChart
+	//console.log(data);
+	filtered = datasetDisplayed.filter(function(d){ return d.Day >=  start && d.Day <= end; }) //why data and not dataDisplayed?
+	//console.log(filtered);
+	radial_labels = [];
+	getRadialLabels(filtered);
+	updateChart(filtered,radial_labels);
+	dataDisplayed = filtered;
+	segmentHeight = (500 - 2 * innerRadius) / (2 * radial_labels.length);// should make this dynamic
+	// if I make it dynamic then when the chart updates the graph grows!! but if I put a static number then it's ok, why?
+    offset = innerRadius + Math.ceil(dataDisplayed.length / numSegments) * segmentHeight;
+    index=0;
+    chart.on("customHover", mouseover(svg,index,innerRadius,numSegments,segmentHeight,dataDisplayed));
+	
+}
+
+
+
+
+	</script>
+	
+  </body>
+</html>
