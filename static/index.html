@@ -156,6 +156,9 @@
 				<div>
 					<button type="button" class="btn btn-primary" id="data1">dataset1</button>
 					<button type="button" class="btn btn-primary" id="data2">dataset2</button>
+					<button type="button" class="btn btn-primary" id="redBtn">red</button>
+					<button type="button" class="btn btn-primary" id="blueBtn">blue</button>
+					<button type="button" class="btn btn-primary" id="pinkBtn">pink</button>
 				</div>	
 				<div>
 					<select id="site-select" class="selectpicker">
@@ -213,8 +216,7 @@ $.getJSON('/get-sites/')
 			console.log(data);
 			var sitesArray = data;
 			$.each(sitesArray,function(index, value) 
-				{
-					/* console.log(value); */
+				{ /* console.log(value); */
 				    $("#site-select").append('<option value=' + value.siteID + '>' + value.siteName + '</option>');
 				});
 		});
@@ -234,13 +236,18 @@ drawSlider(dataDisplayed);
 var segment_labels = ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
 var numSegments = segment_labels.length; //number of pieces the circle is divided into, 24 hours in a day
 var range_blue = ["#ffffd9", "#7fcdbb", "#225ea8"];
+var range_red = ['#fef0d9','#fc8d59','#b30000'];
+var range_pink= ['#feebe2','#f768a1','#7a0177'];
 var index_one = 0;
 
+
+
+var currentRange = range_blue;
 //draw first chart
 
 var chart = d3.acoustic.circularHeat()
 	.domain([0,0.5, 1])// should make this dynamic
-	.range(range_blue)
+	.range(currentRange)
 	.radialLabels(radial_labels)
 	.segmentLabels(segment_labels)
 	._index(index_one);
@@ -418,10 +425,23 @@ function update(passedDataUpdate){
 
 
 
+function changeColor(passed){
+	currentRange= passed.data.param
+	radial_labels = []; 
+	getRadialLabels(dataDisplayed);
+	chart.radialLabels(radial_labels).domain([0,0.5, 1]).range(currentRange);// should make this dynamic
+	d3.select("#chart").datum(dataDisplayed).call(chart);
+	
+}
+
 //swop datasets
 $("#data1").click({param: data}, onClick);
 $("#data2").click({param: data2}, onClick);
 
+
+$("#redBtn").click({param: range_red}, changeColor);
+$("#blueBtn").click({param: range_blue}, changeColor);
+$("#pinkBtn").click({param: range_pink}, changeColor);
 	
 
 
@@ -431,7 +451,7 @@ function getSegmentLabels(){
 }
 
 function swapDataset(passedData,radiallabels){
-	chart.radialLabels(radiallabels).domain([0,0.5, 1]).range(range_blue);// should make this dynamic
+	chart.radialLabels(radiallabels).domain([0,0.5, 1]).range(currentRange);// should make this dynamic
 	d3.select("#chart").datum(passedData).call(chart);
     drawSlider(passedData);
 }
@@ -457,7 +477,7 @@ function getRadialLabels(passedData){
 
 //update viz
 function updateChart(passedData,radiallabels){
-	chart.radialLabels(radiallabels).domain([0,0.5, 1]).range(range_blue);// should make this dynamic
+	chart.radialLabels(radiallabels).domain([0,0.5, 1]).range(currentRange);// should make this dynamic
 	d3.select("#chart").datum(passedData)
         .call(chart);
 }
