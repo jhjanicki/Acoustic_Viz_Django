@@ -700,9 +700,9 @@ function filterData(start,end){
 
 
 	// Set the dimensions of the canvas / graph
-var margin_line = {top: 30, right: 20, bottom: 30, left: 50},
+var margin_line = {top: 70, right: 20, bottom: 70, left: 50},
     width_line = 400 - margin_line.left - margin_line.right,
-    height_line = 270 - margin_line.top - margin_line.bottom;
+    height_line = 400 - margin_line.top - margin_line.bottom;
     
 // Adds the svg canvas
 var svg_line = d3.select("#line")
@@ -738,8 +738,8 @@ var y = d3.scale.linear().range([height_line, 0]);
 
 // Define the axes
 var xAxis = d3.svg.axis().scale(x)
-    .orient("bottom").ticks(5)
-    .tickFormat(d3.time.format("%Y-%m-%d"));;
+    .orient("bottom").ticks(10)
+    .tickFormat(d3.time.format("%Y-%m-%d"));
 
 var yAxis = d3.svg.axis().scale(y)
     .orient("left").ticks(5);
@@ -757,7 +757,8 @@ var valueline = d3.svg.line()
 
     // Scale the range of the data
     x.domain(d3.extent(filteredData, function(d) { return d.Day; }));
-    y.domain([d3.min(filteredData, function(d) { return d.Average; }), d3.max(filteredData, function(d) { return d.Average; })]);
+/*     y.domain([d3.min(filteredData, function(d) { return d.Average; }), d3.max(filteredData, function(d) { return d.Average; })]); */
+    y.domain([-1,1]);
 
     
     var linegraph = svg_line.selectAll("path")
@@ -777,21 +778,25 @@ var valueline = d3.svg.line()
         linegraph.exit().remove();
 
 
-        d3.select(".y.axis")
-                    .transition().duration(1500).ease("sin-in-out")  // https://github.com/mbostock/d3/wiki/Transitions#wiki-d3_ease
-                    .call(yAxis);  
-/*
+
     // Add the X Axis
-    svg.append("g")
+    svg_line.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
+        .attr("transform", "translate(0," + height_line + ")")
+        .call(xAxis)
+        .selectAll("text")	
+            .style("text-anchor", "end")
+            .style("font-size",10)
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-65)" 
+                });
 
     // Add the Y Axis
-    svg.append("g")
+    svg_line.append("g")
         .attr("class", "y axis")
         .call(yAxis);
-*/
 
     
 

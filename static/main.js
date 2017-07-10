@@ -1,93 +1,59 @@
-//default values
-var siteID = {key:'GESASHIOP'};
-var dateStart = {key:'2016-10-29'};
-var dateEnd = {key:'2017-01-15'};
+
+// global variables
 
 
-// 1. user selects site
+// data being mapped
 
-
-$("#site-select").on('change',function(){
-	var selectedSite = $( "#site-select" ).val();
-	siteID.key=selectedSite;
-	
-	$("#selectedsite").text = $( "#site-select option:selected" ).text();
-	
-	$.getJSON('/get-data/', 
-			{date_start: dateStart.key, date_end:dateEnd.key, site_id: siteID.key })		
-		// when the data comes back from the server
-		.done(function(data) {	
-			console.log(data);
-			var dataCleanedArray = [];
-			data.forEach(function(d){
-				var dataCleaned = {};
-				dataCleaned['Day']=d.date_recorded;
-				dataCleaned['Time']=d.time_recorded;
-				dataCleaned['Average']=d.average;
-				dataCleanedArray.push(dataCleaned);
-			})
-			console.log(dataCleanedArray);
-			/*
-for (var i = 0; i < dataCleanedArray.length; i++)
-				{
-				   if (i % 2 !== 0)
-				   {
-				     dataCleanedArray.splice(i, 1);
-				   }
-				}
-*/
-			
-			
-			console.log(dataCleanedArray.length);
-			
-			dataCleanedArray.forEach(function(d,i){
-				//console.log(d);
-				var middle = d.Time.slice(-5);
-
-				/* middle = middle.slice(0,2); */
-				//console.log(middle);
-				if(d.Time.slice(-5)!='00:00'){
-					console.log(true);
-					dataCleanedArray.splice(i,1);
-				}
-				/*
-var end = d.Time.slice(-1,2);
-				console.log(end);
-				if(end!='00'){
-					dataCleanedArray.splice(i,1);
-				}
-*/
-				
-
-			});
-			
-			console.log(dataCleanedArray.length);
-			console.log(dataCleanedArray);
-
-			dataDisplayed = dataCleanedArray;
-			datasetDisplayed = dataCleanedArray;
-			radial_labels = []; 
-			getRadialLabels(dataDisplayed);
-			swapDataset(dataDisplayed,radial_labels);
-			console.log(radial_labels);
-			segmentHeight = (500 - 2 * innerRadius) / (2 * radial_labels.length);
-			// should make this dynamic
-    		offset = innerRadius + Math.ceil(dataDisplayed.length / numSegments) * segmentHeight;
-    		index=0;
-    		chart.on("customHover", mouseover(svg,index,innerRadius,numSegments,segmentHeight,dataDisplayed));
-		});
-	
-	
-});
+var mappedData = {
+			dataDisplayed: data,
+			datasetDisplayed: data,
+			radial_labels: [],
+			segment_labels: ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
+			numSegments: mappedData.segment_labels.length,
+			index_one: 0 ,
+			dateStart: {key:'2016-10-29'},
+			dateEnd: {key:'2017-02-15'},
+			siteID: {key:'GESASHIOP'},
+			currentRange: options.range_blue
+		}
 
 
 
 
 
-// 2. slider populated with earliest start date in data and latest end date
+// loaded initially
+
+getRadialLabels(dataDisplayed);
+drawSlider(dataDisplayed);
 
 
+var cleanData = (function(mappedData) {
+	var external = {};
+	return external;
+})(mappedData);
 
+var drawData = (function() {
+	var external = {};
+	return external;
+})();
+
+var getData = (function(){
+	var external = {};
+	return external;
+})();
+
+var updateData = (function() {
+	var external = {};
+	return external;
+})();
+
+var options = (function() {
+	var external = {};
+	external.range_blue = ["#ffffd9", "#7fcdbb", "#225ea8"];
+	external.range_red = ['#fef0d9','#fc8d59','#b30000'];
+	external.range_pink= ['#feebe2','#f768a1','#7a0177'];
+	return external;
+})();
 
 
 
@@ -98,8 +64,35 @@ $.getJSON('/get-sites/')
 			console.log(data);
 			var sitesArray = data;
 			$.each(sitesArray,function(index, value) 
-				{
-					console.log(value);
+				{ /* console.log(value); */
 				    $("#site-select").append('<option value=' + value.siteID + '>' + value.siteName + '</option>');
 				});
 		});
+		
+//draw first chart
+
+
+var chart = d3.acoustic.circularHeat()
+	.domain([0,0.5, 1])// should make this dynamic
+	.range(currentRange)
+	.radialLabels(radial_labels)
+	.segmentLabels(segment_labels)
+	._index(index_one);
+	
+chart.accessor(function (d) {
+	return d.Average;
+})
+
+d3.select("#chart")
+	 .datum(dataDisplayed)
+	 .call(chart);
+
+//hover effect params
+var innerRadius = chart.innerRadius();
+var numSegments = chart.numSegments();
+var segmentHeight = chart.segmentHeight();
+var offset = chart.offset();
+var svg = d3.select("#chart");
+
+// call mouseover event
+chart.on("customHover", mouseover(svg,index_one,innerRadius,numSegments,segmentHeight,dataDisplayed));
