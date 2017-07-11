@@ -109,9 +109,18 @@
 		}
 		
 		path.line { 
-		    stroke: steelblue;
+		    stroke: #FF9D9E;
 		    stroke-width: 2;
 		    fill: none;
+		}
+		
+		.pink{
+			color:#c51b8a;
+			
+		}
+		.bold{
+			font-weight:600;
+			
 		}
 			  </style>
   </head>
@@ -179,7 +188,7 @@
 					</select>
 				</div>
 				<div>
-					<h3> Selected: <span id="selectedsite"></span> </h3>
+					<h3> Selected Site: <span id="selectedsite" class="bold"></span> </h3>
 				</div>
 				<div id="time-range">
 				    <p>Time Range: <span id="slider-time"></span> to <span id="slider-time2"></span></p>
@@ -193,6 +202,7 @@
 		
 		<div class="row">
 			<div class = "col-md-4">
+				<h4> Selected Time: <span id="selectedtime" class="bold"></span> </h4>
 				<div id="line"></div>
 			</div>
 			<div class = "col-md-8">	
@@ -697,22 +707,77 @@ function filterData(start,end){
 	
 }
 
+var margin_line;
+var width_line;
+var height_line;
+var svg_line;
+var x;
+var y;
+var xAxis;
+var yAxis;
+// Parse the date / time
+var parseDate = d3.time.format("%Y-%m-%d").parse;
 
+initializeLineChart();
+
+function initializeLineChart(){
 
 	// Set the dimensions of the canvas / graph
-var margin_line = {top: 70, right: 20, bottom: 70, left: 50},
-    width_line = 400 - margin_line.left - margin_line.right,
-    height_line = 400 - margin_line.top - margin_line.bottom;
+	margin_line = {top: 20, right: 20, bottom: 70, left: 50};
+    width_line = 400 - margin_line.left - margin_line.right;
+    height_line = 270 - margin_line.top - margin_line.bottom;
     
-// Adds the svg canvas
-var svg_line = d3.select("#line")
-    .append("svg")
-        .attr("width", width_line + margin_line.left + margin_line.right)
-        .attr("height", height_line + margin_line.top + margin_line.bottom)
-        .append("g")
-        .attr("transform", 
-              "translate(" + margin_line.left + "," + margin_line.top + ")");    
+	// Adds the svg canvas
+	svg_line = d3.select("#line")
+	    .append("svg")
+	        .attr("width", width_line + margin_line.left + margin_line.right)
+	        .attr("height", height_line + margin_line.top + margin_line.bottom)
+	        .append("g")
+	        .attr("transform", 
+	              "translate(" + margin_line.left + "," + margin_line.top + ")");  
+	// Set the ranges
+	x = d3.time.scale().domain([parseDate('2016-10-09'),parseDate('2016-11-09')]).range([0, width_line]);
+	y = d3.scale.linear().domain([-1,1]).range([height_line, 0]);
+	
+	// Define the axes
+	xAxis = d3.svg.axis().scale(x)
+	    .orient("bottom").ticks(10)
+	    .tickFormat(d3.time.format("%Y-%m-%d"));
+	
+	yAxis = d3.svg.axis().scale(y)
+	    .orient("left").ticks(5); 
+	    
+	    
+	     // Add the X Axis
+    svg_line.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height_line + ")")
+        .call(xAxis)
+        .selectAll("text")
+        	.attr("class", "text")	
+            .style("text-anchor", "end")
+            .style("font-size",10)
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-65)" 
+                });
 
+    // Add the Y Axis
+    svg_line.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+        
+    //
+    svg_line. append("svg:line")
+                        .attr("x1", 0)
+                        .attr("x2", width_line)
+                        .attr("y1", y(0))
+                        .attr("y2", y(0))
+                        .style("stroke-dasharray", ("3, 3"))
+                        .style("stroke","gray");
+ 
+}
 
 // x vs y = date vs average
 //onClick, get time and list of date-average
@@ -728,21 +793,8 @@ function drawLineGraph(time, passedData, passedLabels){
 	});
 
 
+	$("#selectedtime").text(time);
 
-// Parse the date / time
-var parseDate = d3.time.format("%Y-%m-%d").parse;
-
-// Set the ranges
-var x = d3.time.scale().range([0, width_line]);
-var y = d3.scale.linear().range([height_line, 0]);
-
-// Define the axes
-var xAxis = d3.svg.axis().scale(x)
-    .orient("bottom").ticks(10)
-    .tickFormat(d3.time.format("%Y-%m-%d"));
-
-var yAxis = d3.svg.axis().scale(y)
-    .orient("left").ticks(5);
 
 // Define the line
 var valueline = d3.svg.line()
@@ -761,7 +813,7 @@ var valueline = d3.svg.line()
     y.domain([-1,1]);
 
     
-    var linegraph = svg_line.selectAll("path")
+    var linegraph = svg_line.selectAll("path.line")
         .data([filteredData]);
         
         
@@ -777,14 +829,17 @@ var valueline = d3.svg.line()
         
         linegraph.exit().remove();
 
-
-
-    // Add the X Axis
-    svg_line.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height_line + ")")
-        .call(xAxis)
-        .selectAll("text")	
+        
+        xAxis = d3.svg.axis().scale(x)
+	    .orient("bottom").ticks(10)
+	    .tickFormat(d3.time.format("%Y-%m-%d"));
+	    
+	    
+	    
+	    
+        svg_line.selectAll('g.x.axis').call(xAxis);
+        
+        svg_line.selectAll('.x.axis text')
             .style("text-anchor", "end")
             .style("font-size",10)
             .attr("dx", "-.8em")
@@ -792,11 +847,8 @@ var valueline = d3.svg.line()
             .attr("transform", function(d) {
                 return "rotate(-65)" 
                 });
-
-    // Add the Y Axis
-    svg_line.append("g")
-        .attr("class", "y axis")
-        .call(yAxis);
+        
+        
 
     
 
